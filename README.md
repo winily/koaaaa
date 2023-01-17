@@ -22,6 +22,8 @@
 └── package.json
 ```
 
+一下目录均不支持嵌套级别
+
 - config 配置目录「必需」，会自动读取改目录下的所有文件，配置文件以环境名命名例如：pron,dev,test, default 为默认配置，会与其他配置合并
 
 - middleware「非必需」 中间件目录，目前暂时不支持中间件顺序设定，中间件暴露为标准的 koa 中间件 async (ctx, next) => Promise 模式
@@ -65,6 +67,7 @@ type app: Koa && {
   tools: {
     generateId: () => bigint
   },
+  logger: {debug, info, error}// winston
   service: object,
 }
 ```

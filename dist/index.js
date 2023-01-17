@@ -72,17 +72,6 @@ var response_default = (app) => {
 
 // src/tools/index.js
 var import_assert = require("assert");
-var tools_default = async (app, config) => {
-  app.tools = {};
-  generateId_default(app, config);
-  response_default(app, config);
-  const toolsConfig = config.tools || {};
-  (0, import_assert.ok)(typeof toolsConfig === "object", "config.tools must be an object");
-  Object.keys(toolsConfig).forEach((key) => {
-    (0, import_assert.ok)(typeof toolsConfig[key] === "function", "config.tools item must be an function(app, config)");
-    toolsConfig[key](app, config);
-  });
-};
 
 // src/util/module.js
 var import_promises = require("fs/promises");
@@ -101,17 +90,31 @@ var moduleCatch = (error) => {
   if (!(error instanceof Error) || !error.message.includes("no such file or directory")) {
     return Promise.reject(error);
   }
+  return Promise.resolve([]);
+};
+
+// src/tools/index.js
+var import_path2 = require("path");
+var tools_default = async (app, config) => {
+  app.tools = {};
+  generateId_default(app, config);
+  response_default(app, config);
+  let allModule = await importModules((0, import_path2.join)(app.config.appPath, "tools")).catch(moduleCatch);
+  allModule.forEach((item) => {
+    (0, import_assert.ok)(typeof item === "function", "config.tools item must be an function(app, config)");
+    item(app, config);
+  });
 };
 
 // src/service.js
-var import_path2 = require("path");
+var import_path3 = require("path");
 var toServiceName = (service) => {
   let name = service.name;
   name = name.replace("Service", "");
   return `${name[0].toLocaleLowerCase()}${name.substring(1)}`;
 };
 var service_default = async (app) => {
-  const allModule = await importModules((0, import_path2.join)(app.config.appPath, "service")).catch(moduleCatch);
+  const allModule = await importModules((0, import_path3.join)(app.config.appPath, "service")).catch(moduleCatch);
   const service = {};
   allModule.forEach((item) => {
     const name = toServiceName(item);
@@ -121,11 +124,11 @@ var service_default = async (app) => {
 };
 
 // src/middleware/index.js
-var import_path3 = require("path");
+var import_path4 = require("path");
 var import_koa_body = require("koa-body");
 var middleware_default = async (app) => {
   app.use((0, import_koa_body.koaBody)(app.config.body));
-  let allModule = await importModules((0, import_path3.join)(app.config.appPath, "middleware")).catch(moduleCatch);
+  let allModule = await importModules((0, import_path4.join)(app.config.appPath, "middleware")).catch(moduleCatch);
   allModule.forEach((item) => {
     app.use(item);
   });
@@ -133,9 +136,9 @@ var middleware_default = async (app) => {
 
 // src/controller.js
 var import_koa_router = __toESM(require("koa-router"));
-var import_path4 = require("path");
+var import_path5 = require("path");
 var controller_default = async (app) => {
-  const allModule = await importModules((0, import_path4.join)(app.config.appPath, "controller")).catch(moduleCatch);
+  const allModule = await importModules((0, import_path5.join)(app.config.appPath, "controller"));
   const router = new import_koa_router.default();
   allModule.forEach((item) => item(app, router, app.tools || {}));
   app.use(router.routes());
@@ -160,7 +163,7 @@ var application_default = async (config) => {
 
 // src/config.js
 var import_os = require("os");
-var import_path5 = require("path");
+var import_path6 = require("path");
 var import_process2 = require("process");
 var import_winston2 = __toESM(require("winston"));
 var import_lodash = __toESM(require("lodash"));
@@ -188,8 +191,8 @@ var systemDefault = {
   }
 };
 var config_default = async () => {
-  const modules = await importModules((0, import_path5.join)(appPath, "config"), (item) => {
-    const url = (0, import_path5.parse)(item.path);
+  const modules = await importModules((0, import_path6.join)(appPath, "config"), (item) => {
+    const url = (0, import_path6.parse)(item.path);
     return { [url.name.toLocaleUpperCase()]: item.default };
   });
   const configs = merge(...modules);
@@ -201,29 +204,11 @@ var config_default = async () => {
 
 // src/index.js
 Promise.resolve().then(() => __toESM(require_local_injection()));
-var statisticalRouter = async (app) => {
-  const router = await controller_default(app);
-  const routerList = router.stack.map((item) => `[${item.methods.join(",")}]:${item.path}`).join("\n");
-  console.log();
-  app.logger.debug(`Router: 
-${routerList}
-`);
-};
-var debug = async (config, logger) => {
-  const main = {
-    app: { config, logger, use: () => {
-    } }
-  };
-  await statisticalRouter(main.app);
-  delete main.app;
-};
 module.exports = async () => {
   const config = await config_default();
   if (!import_cluster.default.isPrimary)
     return application_default(config);
   const logger = import_winston3.default.createLogger(config.logger || {});
-  if (config.env === "DEV")
-    await debug(config, logger);
   logger.info(`\u672C\u673A CPU \u6570\u91CF ${(0, import_os2.cpus)().length}, \u5C06\u542F\u52A8\uFF1A${config.worker.count}, \u4E2A\u8FDB\u7A0B\u3002`);
   const workers = [];
   for (let i = 0; i < config.worker.count; i++) {
@@ -241,7 +226,7 @@ module.exports = async () => {
     });
   }
   const intervalId = setInterval(() => {
-    if (okCount < 4)
+    if (okCount < workers.length)
       return;
     logger.info(`URL: http://localhost:${config.server.port}`);
     clearInterval(intervalId);

@@ -4,7 +4,7 @@ import { join } from 'path'
 
 export default async (app) => {
 
-  const allModule = await importModules(join(app.config.appPath, 'controller')).catch(moduleCatch)
+  const allModule = await importModules(join(app.config.appPath, 'controller'))
   const router = new Router();
 
   allModule

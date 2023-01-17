@@ -16,4 +16,5 @@ export const moduleCatch = (error) => {
   if (!(error instanceof Error) || !error.message.includes('no such file or directory')) {
     return Promise.reject(error)
   }
+  return Promise.resolve([])
 } 
