@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev": "NODE_ENV=dev node app.js",
+    "start": "cd ../ && yarn build && cd ./test/ &&  yarn dev"
+  },
+  "name": "test",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT"
+}

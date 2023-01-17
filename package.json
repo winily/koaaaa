@@ -1,0 +1,27 @@
+{
+  "name": "military-chess-backend",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "yarn build && NODE_ENV=dev node dist/index.js",
+    "build": "node scripts/build.js"
+  },
+  "dependencies": {
+    "koa": "^2.13.4",
+    "koa-body": "^6.0.1",
+    "koa-compress": "^5.1.0",
+    "koa-query": "^0.0.6",
+    "koa-router": "^12.0.0",
+    "lodash": "^4.17.21",
+    "mongodb": "^4.11.0",
+    "mysql2": "^2.3.3",
+    "nodejs-snowflake": "^2.0.1",
+    "socket.io": "^4.5.4",
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "@types/zeromq": "^5.2.1",
+    "esbuild": "^0.17.0"
+  }
+}
